@@ -1,0 +1,243 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --parchment: #ede3cf;
+  --slip: #fffdf8;
+  --ink: #3a2217;
+  --crust: #b4672b;
+  --teal: #2e6f73;
+  --tomato: #d5442f;
+  --flour: #f7f1e6;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-[color:var(--parchment)] text-[color:var(--ink)] font-ui antialiased;
+    background-image: url('/speckle.svg');
+    background-repeat: repeat;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--crust) 30%, transparent);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--teal);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+}
+
+@layer components {
+  .font-display {
+    font-family: 'Gloock', 'Georgia', serif;
+  }
+
+  .font-slip {
+    font-family: 'Spline Sans Mono', 'Courier New', monospace;
+  }
+}
+
+/* Spring cavity fill — ~420ms, ease-out with slight overshoot */
+@keyframes cavity-fill {
+  0% {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Slip prints from the top in stepped increments — ~600ms */
+@keyframes slip-print {
+  0% {
+    clip-path: inset(0 0 100% 0);
+    transform: translateY(-6px);
+  }
+  30% {
+    clip-path: inset(0 0 55% 0);
+  }
+  55% {
+    clip-path: inset(0 0 25% 0);
+  }
+  80% {
+    clip-path: inset(0 0 8% 0);
+  }
+  100% {
+    clip-path: inset(0 0 0 0);
+    transform: translateY(0);
+  }
+}
+
+/* Stamp lands with a short scale — ~180ms */
+@keyframes stamp-land {
+  0% {
+    transform: scale(1.6) rotate(-8deg);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(0.95) rotate(-2deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(-3deg);
+    opacity: 1;
+  }
+}
+
+/* Chat message eases in */
+@keyframes msg-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Typing indicator breathes */
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Pencil tally marks draw themselves */
+@keyframes tally-stroke {
+  from {
+    stroke-dashoffset: 24;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.anim-cavity {
+  animation: cavity-fill 420ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.anim-slip {
+  animation: slip-print 600ms steps(6, end) both;
+}
+
+.anim-stamp {
+  animation: stamp-land 180ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+.anim-msg {
+  animation: msg-in 240ms ease-out both;
+}
+
+.anim-breathe {
+  animation: breathe 1.2s ease-in-out infinite;
+}
+
+/* ---- Print: when the Baker's sheet dialog is open, print only the sheet ---- */
+@page {
+  size: auto;
+  margin: 12mm;
+}
+
+@media print {
+  html,
+  body,
+  #root {
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    position: static !important;
+    background: #ffffff !important;
+    background-image: none !important;
+    color: #000000 !important;
+  }
+
+  /* Hide everything by default, then re-show only the sheet. display:none
+     (not visibility:hidden) so the hidden blocks take no layout space and
+     cannot push blank pages into the print output. */
+  body.printing-sheet > *:not(.bakers-sheet-print) {
+    display: none !important;
+  }
+  body.printing-sheet * {
+    visibility: visible !important;
+  }
+
+  /* The sheet itself prints in normal flow: static, full width, no min-height,
+     and kept together on one page. */
+  body.printing-sheet .bakers-sheet-print {
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    inset: auto !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    color: #000000 !important;
+    z-index: auto !important;
+    display: block !important;
+    break-inside: avoid !important;
+  }
+
+  body.printing-sheet .bakers-sheet-print * {
+    color: #000000 !important;
+    background: transparent !important;
+    position: static !important;
+  }
+
+  body.printing-sheet .bakers-sheet-print .print\:hidden {
+    display: none !important;
+  }
+
+  /* Hide the "Made in Bolt" badge injected at runtime by the Bolt runtime.
+     It is a fixed-position element outside #root; hide any such badge by
+     common selectors, and any other fixed/absolute overlay during print. */
+  body.printing-sheet [class*="bolt" i],
+  body.printing-sheet [class*="badge" i],
+  body.printing-sheet [data-bolt],
+  body.printing-sheet [class*="made-in" i] {
+    display: none !important;
+  }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .anim-cavity,
+  .anim-slip,
+  .anim-stamp,
+  .anim-msg {
+    animation: none;
+  }
+
+  .anim-breathe {
+    animation: none;
+    opacity: 0.7;
+  }
+}
